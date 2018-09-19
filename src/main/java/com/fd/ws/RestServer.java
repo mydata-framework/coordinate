@@ -79,6 +79,7 @@ public class RestServer {
 			while (ite.hasNext()) {
 				if (ite.next().getSession().getId().equals(session.getId())) {
 					ite.remove();
+					log.error(String.format("%s客户端销毁成功..", session.getId()));
 				}
 			}
 		} else {
@@ -96,8 +97,10 @@ public class RestServer {
 			log.info(api.toString());
 			sendapi(api);
 			if (api.getHttpApiInfo().getIsOnline()) {
-				CoordinateUtil.CLIENTS.add(new ClientInfo(api, session));
-				log.info(String.format("服务器%s上线", api.getHttpApiInfo().getBaseUrl()));
+				synchronized (CoordinateUtil.CLIENTS) {
+					CoordinateUtil.CLIENTS.add(new ClientInfo(api, session));
+					log.info(String.format("服务器%s上线", api.getHttpApiInfo().getBaseUrl()));
+				}
 			} else {
 				log.info(String.format("服务器%s下线", api.getHttpApiInfo().getBaseUrl()));
 				CoordinateUtil.CLIENTS.remove(new ClientInfo(api, session));
