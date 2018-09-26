@@ -155,7 +155,7 @@ public class RestServer {
 	public void onPong(PongMessage pm) {
 		if (Arrays.equals(pm.getApplicationData().array(), pings)) {
 			isAlive = true;
-			log.info("心跳成功...");
+			log.info("{}心跳成功...", reqInfo.getRemoteAddr());
 		} else {
 			log.info("ping已断开连接");
 			isAlive = false;
