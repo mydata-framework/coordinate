@@ -1,7 +1,11 @@
 package com.fd.listener;
 
 import java.lang.reflect.Array;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Map;
 
 import javax.servlet.ServletRequestEvent;
@@ -72,6 +76,44 @@ public class WsServerListener implements ServletRequestListener {
 		return !isEmpty(obj);
 	}
 
+	public static String getloopBackAddress() {
+		try {
+			Enumeration<NetworkInterface> ccs = NetworkInterface.getNetworkInterfaces();
+			while (ccs.hasMoreElements()) {
+				NetworkInterface cc = ccs.nextElement();
+				if (cc.isLoopback()) {
+					Enumeration<InetAddress> sss = cc.getInetAddresses();
+					while (sss.hasMoreElements()) {
+						InetAddress ia = sss.nextElement();
+						return ia.getHostAddress();
+					}
+				}
+			}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+
+	public static String getLanAddress() {
+		try {
+			Enumeration<NetworkInterface> ccs = NetworkInterface.getNetworkInterfaces();
+			while (ccs.hasMoreElements()) {
+				NetworkInterface cc = ccs.nextElement();
+				if (!cc.isLoopback()) {
+					Enumeration<InetAddress> sss = cc.getInetAddresses();
+					while (sss.hasMoreElements()) {
+						InetAddress ia = sss.nextElement();
+						return ia.getHostAddress();
+					}
+				}
+			}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+
 	/**
 	 * 得到用户的IP地址
 	 * 
@@ -85,11 +127,20 @@ public class WsServerListener implements ServletRequestListener {
 			if (isNotEmpty(clientIp)) {
 				return clientIp;
 			} else {
-				return req.getRemoteAddr();
+				return getrmip(req);
 			}
 		} else {
 			return clientIp;
 		}
 
+	}
+
+	private static String getrmip(HttpServletRequest req) {
+		String remoteAddr = req.getRemoteAddr();
+		if (remoteAddr.equals(getloopBackAddress())) {
+			return getLanAddress();
+		} else {
+			return remoteAddr;
+		}
 	}
 }
