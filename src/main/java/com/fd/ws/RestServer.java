@@ -77,9 +77,14 @@ public class RestServer {
 			log.error(String.format("客户端%s关闭连接..", ha.getBaseUrl()));
 			Iterator<ClientInfo> ite = CoordinateUtil.CLIENTS.iterator();
 			while (ite.hasNext()) {
-				if (ite.next().getSession().getId().equals(session.getId())) {
+				ClientInfo disapicl = ite.next();
+				if (disapicl.getSession().getId().equals(session.getId())) {
 					ite.remove();
+					ClientApi clientApi = disapicl.getClientApi();
+					clientApi.getHttpApiInfo().setIsOnline(false);
+					sendapi(clientApi);
 					log.error(String.format("%s客户端销毁成功..", session.getId()));
+					log.error("还剩客户端总数量:{}", CoordinateUtil.CLIENTS.size());
 				}
 			}
 		} else {
