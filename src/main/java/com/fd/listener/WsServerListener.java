@@ -1,6 +1,8 @@
 package com.fd.listener;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -13,6 +15,9 @@ import javax.servlet.ServletRequestListener;
 import javax.servlet.annotation.WebListener;
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fd.microSevice.helper.ReqInfo;
 
 /**
@@ -23,6 +28,7 @@ import com.fd.microSevice.helper.ReqInfo;
  */
 @WebListener
 public class WsServerListener implements ServletRequestListener {
+	static Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	public final static String REQ_INFO = "REQ_INFO";
 
 	@Override
@@ -85,7 +91,10 @@ public class WsServerListener implements ServletRequestListener {
 					Enumeration<InetAddress> sss = cc.getInetAddresses();
 					while (sss.hasMoreElements()) {
 						InetAddress ia = sss.nextElement();
-						return ia.getHostAddress();
+						log.info("服务注册来源地:{}", ia.getHostAddress());
+						if (isIpv4(ia)) {
+							return ia.getHostAddress();
+						}
 					}
 				}
 			}
@@ -93,6 +102,10 @@ public class WsServerListener implements ServletRequestListener {
 			e.printStackTrace();
 		}
 		return "";
+	}
+
+	private static boolean isIpv4(InetAddress ia) {
+		return ia instanceof Inet4Address;
 	}
 
 	public static String getLanAddress() {
@@ -104,7 +117,9 @@ public class WsServerListener implements ServletRequestListener {
 					Enumeration<InetAddress> sss = cc.getInetAddresses();
 					while (sss.hasMoreElements()) {
 						InetAddress ia = sss.nextElement();
-						return ia.getHostAddress();
+						if (isIpv4(ia)) {
+							return ia.getHostAddress();
+						}
 					}
 				}
 			}
