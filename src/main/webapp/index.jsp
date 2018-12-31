@@ -7,6 +7,14 @@
 <title></title>
 </head>
 <body>
-ccc
+	It's Ok!!
+	<br />
+	<div>
+		<a href="${MYCONTEXTPATH}/home" target="_blank">继续探索</a>
+	</div>
+	|
+	<div>
+		<a href="${MYCONTEXTPATH}/login" target="_blank">登录</a>
+	</div>
 </body>
 </html>
