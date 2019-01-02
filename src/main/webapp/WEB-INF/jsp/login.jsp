@@ -10,29 +10,31 @@
 <title>登录</title>
 </head>
 <body>
+	<div class="container">
 
-	<div class="jumbotron">
+		<div class="jumbotron">
 
-		<form method="post" action="${MYCONTEXTPATH}/login">
-			<div class="form-row align-items-center">
-				<div class="col-auto">
-					<input type="text" class="form-control mb-2" id="username"
-						required="required" autocomplete="off" placeholder="username"
-						name="username">
-				</div>
-				<div class="col-auto">
-					<div class="input-group mb-2">
-						<input type="password" class="form-control" id="password"
-							placeholder="password" required="required" autocomplete="off"
-							name="password">
+			<form method="post" action="${MYCONTEXTPATH}/login">
+				<div class="form-row align-items-center">
+					<div class="col-auto">
+						<input type="text" class="form-control mb-2" id="username"
+							required="required" autocomplete="off" placeholder="username"
+							name="username">
+					</div>
+					<div class="col-auto">
+						<div class="input-group mb-2">
+							<input type="password" class="form-control" id="password"
+								placeholder="password" required="required" autocomplete="off"
+								name="password">
+						</div>
+					</div>
+
+					<div class="col-auto">
+						<button type="submit" class="btn btn-primary mb-2">Submit</button>
 					</div>
 				</div>
-
-				<div class="col-auto">
-					<button type="submit" class="btn btn-primary mb-2">Submit</button>
-				</div>
-			</div>
-		</form>
+			</form>
+		</div>
 	</div>
 	<%@include file="/WEB-INF/jsp/common/js.jsp"%>
 

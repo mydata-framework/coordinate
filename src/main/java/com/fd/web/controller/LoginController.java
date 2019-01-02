@@ -8,7 +8,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fd.web.controller.base.BaseController;
 
@@ -25,7 +24,6 @@ public class LoginController extends BaseController {
 	static ResourceBundle INIT_RB = ResourceBundle.getBundle("init");
 	static int error = 0;
 
-	@ResponseBody
 	@PostMapping
 	public String userlogin(HttpServletRequest req) {
 		try {
@@ -35,15 +33,15 @@ public class LoginController extends BaseController {
 				if ("fudong".equals(username) && INIT_RB.getString("password").equals(password)) {
 					req.getSession().setAttribute("auth_login_user", true);
 					error = 0;
-					return "success";
+					return "redirect:/home";
 				} else {
 					error++;
-					return "failure";
+					return "login";
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return "failure";
+		return "login";
 	}
 }
