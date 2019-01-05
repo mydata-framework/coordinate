@@ -39,16 +39,23 @@ public class HomeController extends BaseController {
 		for (ClientInfo c : CoordinateUtil.CLIENTS) {
 			int count = Long.valueOf(c.getClientApi().getApis().stream().map(ApiInfo::getName).distinct().count())
 					.intValue();
-			a: for (ApiInfo api : c.getClientApi().getApis()) {
-				ApiInfoVo av = new ApiInfoVo(c.getClientApi().getHttpApiInfo().getHost(),
-						c.getClientApi().getHttpApiInfo().getPort(), count, api.getName(), api.getMethod().toString(),
-						c.getClientApi().getHttpApiInfo().getContextPath());
-				for (ApiInfoVo a : aivs) {
-					if (a.equals(av)) {
-						a.setMethods(a.getMethods() + "," + av.getMethods());
-						continue a;
+			if (c.getClientApi().getApis().size() > 0) {
+				a: for (ApiInfo api : c.getClientApi().getApis()) {
+					ApiInfoVo av = new ApiInfoVo(c.getClientApi().getHttpApiInfo().getHost(),
+							c.getClientApi().getHttpApiInfo().getPort(), count, api.getName(),
+							api.getMethod().toString(), c.getClientApi().getHttpApiInfo().getContextPath());
+					for (ApiInfoVo a : aivs) {
+						if (a.equals(av)) {
+							a.setMethods(a.getMethods() + "," + av.getMethods());
+							continue a;
+						}
 					}
+					aivs.add(av);
 				}
+			} else {
+				ApiInfoVo av = new ApiInfoVo(c.getClientApi().getHttpApiInfo().getHost(),
+						c.getClientApi().getHttpApiInfo().getPort(), count, "", "",
+						c.getClientApi().getHttpApiInfo().getContextPath());
 				aivs.add(av);
 			}
 		}
