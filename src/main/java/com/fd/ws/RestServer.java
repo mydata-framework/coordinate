@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.fd.cfg.RestServerConfigurator;
 import com.fd.listener.WsServerListener;
 import com.fd.microSevice.code.RestCode;
+import com.fd.microSevice.helper.ApiInfo;
 import com.fd.microSevice.helper.ClientApi;
 import com.fd.microSevice.helper.ClientInfo;
 import com.fd.microSevice.helper.CoordinateUtil;
@@ -135,6 +136,13 @@ public class RestServer {
 				CoordinateUtil.CLIENTS.remove(curClient);
 			}
 			log.info(String.format("添加完毕，当前客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
+		} else if (api.getSync()) {
+			for (ApiInfo ai : api.getApis()) {
+				ClientApi ca = CoordinateUtil.getClientApiByApiInfo(ai.getName(), ai.getMethod());
+				if (ca != null && session.isOpen()) {
+					session.getAsyncRemote().sendObject(ca);
+				}
+			}
 		} else {
 			log.error(String.format("%s ContextPath is  null  ", api.getHttpApiInfo().getHost()));
 		}
