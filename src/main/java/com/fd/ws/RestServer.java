@@ -1,6 +1,5 @@
 package com.fd.ws;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -81,16 +80,18 @@ public class RestServer {
 
 	@OnError
 	public void error(Throwable e, Session session) {
-		HttpApiInfo ha = CoordinateUtil.getHttpApiInfo(session);
-		if (ha != null) {
-			log.error(String.format("客户端%s出错", ha.getBaseUrl()), e);
-			try {
-				if (session.isOpen()) {
-					session.close();
-				}
-			} catch (IOException e1) {
-				e1.printStackTrace();
+
+		try {
+			if (session.isOpen()) {
+				session.close();
 			}
+			HttpApiInfo ha = CoordinateUtil.getHttpApiInfo(session);
+			if (ha != null) {
+				log.error(String.format("客户端%s出错", ha.getBaseUrl()), e);
+			}
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			log.error("严重了。。。。。。。。。。。。。。", e);
 		}
 	}
 
@@ -118,33 +119,37 @@ public class RestServer {
 
 	@OnMessage
 	public void handlerData(ClientApi api, Session session) {
-		if (api.getHttpApiInfo().getContextPath() != null) {
-			log.info(String.format("新增前，客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
-			if (api.getHttpApiInfo().getHost() == null || api.getHttpApiInfo().getHost().trim().length() < 4) {
-				api.getHttpApiInfo().setHost(reqInfo.getRemoteAddr());
-			}
-			log.info(api.toString());
-			sendapi(api, session);
-			ClientInfo curClient = new ClientInfo(api, session);
-			if (api.getHttpApiInfo().getIsOnline()) {
-				synchronized (CoordinateUtil.CLIENTS) {
-					CoordinateUtil.CLIENTS.add(curClient);
-					log.info(String.format("服务器%s上线", api.getHttpApiInfo().getBaseUrl()));
-				}
-			} else {
-				log.info(String.format("服务器%s下线", api.getHttpApiInfo().getBaseUrl()));
-				CoordinateUtil.CLIENTS.remove(curClient);
-			}
-			log.info(String.format("添加完毕，当前客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
-		} else if (api.getSync()) {
+		if (api.getSync()) {
 			for (ApiInfo ai : api.getApis()) {
 				ClientApi ca = CoordinateUtil.getClientApiByApiInfo(ai.getName(), ai.getMethod());
 				if (ca != null && session.isOpen()) {
 					session.getAsyncRemote().sendObject(ca);
 				}
 			}
+		} else if (api.getHttpApiInfo() != null) {
+			if (api.getHttpApiInfo().getContextPath() != null) {
+				log.info(String.format("新增前，客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
+				if (api.getHttpApiInfo().getHost() == null || api.getHttpApiInfo().getHost().trim().length() < 4) {
+					api.getHttpApiInfo().setHost(reqInfo.getRemoteAddr());
+				}
+				log.info(api.toString());
+				sendapi(api, session);
+				ClientInfo curClient = new ClientInfo(api, session);
+				if (api.getHttpApiInfo().getIsOnline()) {
+					synchronized (CoordinateUtil.CLIENTS) {
+						CoordinateUtil.CLIENTS.add(curClient);
+						log.info(String.format("服务器%s上线", api.getHttpApiInfo().getBaseUrl()));
+					}
+				} else {
+					log.info(String.format("服务器%s下线", api.getHttpApiInfo().getBaseUrl()));
+					CoordinateUtil.CLIENTS.remove(curClient);
+				}
+				log.info(String.format("添加完毕，当前客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
+			} else {
+				log.error(String.format("%s ContextPath is  null  ", api.getHttpApiInfo().getHost()));
+			}
 		} else {
-			log.error(String.format("%s ContextPath is  null  ", api.getHttpApiInfo().getHost()));
+			log.error("非法请求........................................");
 		}
 	}
 
