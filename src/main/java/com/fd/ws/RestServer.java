@@ -1,5 +1,6 @@
 package com.fd.ws;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +11,7 @@ import java.util.TimerTask;
 
 import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
+import javax.websocket.EncodeException;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
@@ -49,7 +51,11 @@ public class RestServer {
 		this.reqInfo = (ReqInfo) config.getUserProperties().get(WsServerListener.REQ_INFO);
 		for (ClientInfo ci : CoordinateUtil.CLIENTS) {
 			if (ci.getSession() != session && !ci.getSession().getId().equals(session.getId()) && session.isOpen()) {
-				session.getAsyncRemote().sendObject(ci.getClientApi());
+				try {
+					session.getBasicRemote().sendObject(ci.getClientApi());
+				} catch (IOException | EncodeException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		timer.schedule(new TimerTask() {
@@ -123,9 +129,15 @@ public class RestServer {
 			for (ApiInfo ai : api.getApis()) {
 				ClientApi ca = CoordinateUtil.getClientApiByApiInfo(ai.getName(), ai.getMethod());
 				if (ca != null && session.isOpen()) {
-					session.getAsyncRemote().sendObject(ca);
+					try {
+						session.getBasicRemote().sendObject(ca);
+						log.info("主动同步成功。。。。");
+					} catch (IOException | EncodeException e) {
+						e.printStackTrace();
+					}
 				}
 			}
+
 		} else if (api.getHttpApiInfo() != null) {
 			if (api.getHttpApiInfo().getContextPath() != null) {
 				log.info(String.format("新增前，客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
