@@ -151,10 +151,17 @@ public class RestServer {
 					if (api.getHttpApiInfo().getIsOnline()) {
 						CoordinateUtil.CLIENTS.add(curClient);
 						log.info(String.format("服务器%s上线", api.getHttpApiInfo().getBaseUrl()));
-
 					} else {
 						log.info(String.format("服务器%s下线", api.getHttpApiInfo().getBaseUrl()));
 						CoordinateUtil.CLIENTS.remove(curClient);
+						if (curClient.getSession().isOpen()) {
+							try {
+								curClient.getSession().close();
+							} catch (Exception e) {
+								e.printStackTrace();
+								log.error("close:", e);
+							}
+						}
 					}
 				}
 				log.info(String.format("添加完毕，当前客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
