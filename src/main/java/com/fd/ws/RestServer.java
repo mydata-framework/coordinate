@@ -153,7 +153,6 @@ public class RestServer {
 						log.info(String.format("服务器%s上线", api.getHttpApiInfo().getBaseUrl()));
 					} else {
 						log.info(String.format("服务器%s下线", api.getHttpApiInfo().getBaseUrl()));
-						CoordinateUtil.CLIENTS.remove(curClient);
 						if (curClient.getSession().isOpen()) {
 							try {
 								curClient.getSession().close();
@@ -162,6 +161,7 @@ public class RestServer {
 								log.error("close:", e);
 							}
 						}
+						CoordinateUtil.CLIENTS.remove(curClient);
 					}
 				}
 				log.info(String.format("添加完毕，当前客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
