@@ -147,14 +147,15 @@ public class RestServer {
 				log.info(api.toString());
 				sendapi(api, session);
 				ClientInfo curClient = new ClientInfo(api, session);
-				if (api.getHttpApiInfo().getIsOnline()) {
-					synchronized (CoordinateUtil.CLIENTS) {
+				synchronized (CoordinateUtil.CLIENTS) {
+					if (api.getHttpApiInfo().getIsOnline()) {
 						CoordinateUtil.CLIENTS.add(curClient);
 						log.info(String.format("服务器%s上线", api.getHttpApiInfo().getBaseUrl()));
+
+					} else {
+						log.info(String.format("服务器%s下线", api.getHttpApiInfo().getBaseUrl()));
+						CoordinateUtil.CLIENTS.remove(curClient);
 					}
-				} else {
-					log.info(String.format("服务器%s下线", api.getHttpApiInfo().getBaseUrl()));
-					CoordinateUtil.CLIENTS.remove(curClient);
 				}
 				log.info(String.format("添加完毕，当前客户端总数量：%s", CoordinateUtil.CLIENTS.size()));
 			} else {
