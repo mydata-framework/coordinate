@@ -105,21 +105,26 @@ public class RestServer {
 	}
 
 	@OnClose
-	public void close(Session session) {
+	public void close(Session session, CloseReason cr) {
+		log.info("{},{},open={}", cr.getCloseCode(), cr.getReasonPhrase(), session.isOpen());
 		synchronized (CoordinateUtil.CLIENTS) {
 			HttpApiInfo ha = CoordinateUtil.getHttpApiInfo(session);
 			if (ha != null) {
 				log.error(String.format("客户端%s关闭连接..", ha.getBaseUrl()));
-				Iterator<ClientInfo> ite = CoordinateUtil.CLIENTS.iterator();
-				while (ite.hasNext()) {
-					ClientInfo disapicl = ite.next();
-					if (disapicl.getSession().getId().equals(session.getId())) {
-						ite.remove();
-						ClientApi clientApi = disapicl.getClientApi();
-						clientApi.getHttpApiInfo().setIsOnline(false);
-						sendapi(clientApi, session);
-						log.error(String.format("%s客户端销毁成功..", session.getId()));
-						log.error("还剩客户端总数量:{}", CoordinateUtil.CLIENTS.size());
+				if (!cr.getCloseCode().equals(CloseCodes.UNEXPECTED_CONDITION)
+						&& !cr.getCloseCode().equals(CloseCodes.GOING_AWAY)) {
+					Iterator<ClientInfo> ite = CoordinateUtil.CLIENTS.iterator();
+					while (ite.hasNext()) {
+						ClientInfo disapicl = ite.next();
+						if (disapicl.getSession().getId().equals(session.getId())) {
+							ite.remove();
+
+							ClientApi clientApi = disapicl.getClientApi();
+							clientApi.getHttpApiInfo().setIsOnline(false);
+							sendapi(clientApi, session);
+							log.error(String.format("%s客户端销毁成功..", session.getId()));
+							log.error("还剩客户端总数量:{}", CoordinateUtil.CLIENTS.size());
+						}
 					}
 				}
 			} else {
@@ -178,7 +183,7 @@ public class RestServer {
 	}
 
 	private void sendapi(ClientApi api, Session session) {
-		CoordinateUtil.CLIENTS.parallelStream().forEach(ci->{
+		CoordinateUtil.CLIENTS.parallelStream().forEach(ci -> {
 			Session se = ci.getSession();
 			if (!se.getId().equals(session.getId()) && se.isOpen()) {
 				try {
@@ -192,9 +197,9 @@ public class RestServer {
 					e.printStackTrace();
 				}
 			}
-			
+
 		});
-		
+
 	}
 
 	private static Timer timer = new Timer(true);
