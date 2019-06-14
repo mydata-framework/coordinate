@@ -87,7 +87,7 @@ public class WsServerListener implements ServletRequestListener {
 			Enumeration<NetworkInterface> ccs = NetworkInterface.getNetworkInterfaces();
 			while (ccs.hasMoreElements()) {
 				NetworkInterface cc = ccs.nextElement();
-				if (cc.isLoopback()) {
+				if (cc.isLoopback()&&cc.isUp()) {
 					Enumeration<InetAddress> sss = cc.getInetAddresses();
 					while (sss.hasMoreElements()) {
 						InetAddress ia = sss.nextElement();
@@ -113,7 +113,7 @@ public class WsServerListener implements ServletRequestListener {
 			Enumeration<NetworkInterface> ccs = NetworkInterface.getNetworkInterfaces();
 			while (ccs.hasMoreElements()) {
 				NetworkInterface cc = ccs.nextElement();
-				if (!cc.isLoopback()) {
+				if (!cc.isLoopback()&&!cc.isVirtual()&&cc.isUp()) {
 					Enumeration<InetAddress> sss = cc.getInetAddresses();
 					while (sss.hasMoreElements()) {
 						InetAddress ia = sss.nextElement();
