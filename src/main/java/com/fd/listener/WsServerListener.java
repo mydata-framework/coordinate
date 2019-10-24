@@ -40,7 +40,7 @@ public class WsServerListener implements ServletRequestListener {
 	@Override
 	public void requestInitialized(ServletRequestEvent sre) {
 		HttpServletRequest req = (HttpServletRequest) sre.getServletRequest();
-		ReqInfo reqinfo = new ReqInfo(getUserIp((HttpServletRequest) sre.getServletRequest()));
+		ReqInfo reqinfo = new ReqInfo(getUserIp(req));
 		req.getSession().setAttribute(REQ_INFO, reqinfo);
 	}
 

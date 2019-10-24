@@ -6,8 +6,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
@@ -43,8 +45,11 @@ import com.fd.microSevice.helper.ReqInfo;
 @ServerEndpoint(value = "/restcoordinate", configurator = RestServerConfigurator.class, decoders = {
 		RestCode.class }, encoders = { RestCode.class })
 public class RestServer {
-	static Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	private ReqInfo reqInfo;
+	private final static ScheduledExecutorService SESPOOL = Executors
+			.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+	private volatile ScheduledFuture<?> tf = null;
 
 	@OnOpen
 	public void open(Session session, EndpointConfig config) {
@@ -60,31 +65,39 @@ public class RestServer {
 					}
 				}
 			}
-			timer.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					try {
-						if (session.isOpen()) {
-							if (isAlive) {
-								isAlive = false;
-								session.getBasicRemote().sendPing(ByteBuffer.wrap(pings));
-							} else {
-								cancel();
-								if (session.isOpen()) {
-									log.error("关闭half-open连接");
-									session.close(new CloseReason(CloseCodes.CLOSED_ABNORMALLY, "已经超时，请重新连接。"));
-								}
-							}
-						} else {
-							cancel();
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						log.error("heartbeat", e);
-					}
-				}
-			}, 50000, 50000);
+
+			startheartbeat(session);
 		}
+	}
+
+	private void startheartbeat(Session session) {
+		Runnable call = () -> {
+			try {
+				if (session.isOpen()) {
+					if (isAlive) {
+						isAlive = false;
+						session.getBasicRemote().sendPing(ByteBuffer.wrap(pings));
+					} else {
+						if (session.isOpen()) {
+							log.error("关闭half-open连接");
+							session.close(new CloseReason(CloseCodes.CLOSED_ABNORMALLY, "已经超时，请重新连接。"));
+						}
+						log.info("{}:heartbt canceled",session.getId());
+						tf.cancel(true);
+					}
+				} else {
+					log.info("{}:heartbt canceled",session.getId());
+					tf.cancel(true);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				log.error("heartbeat", e);
+				log.info("{}:heartbt canceled",session.getId());
+				tf.cancel(true);
+			}
+
+		};
+		tf = SESPOOL.scheduleAtFixedRate(call, 50, 50, TimeUnit.SECONDS);
 	}
 
 	@OnError
@@ -202,7 +215,6 @@ public class RestServer {
 
 	}
 
-	private static Timer timer = new Timer(true);
 	// 判断连接是否有效
 	private volatile boolean isAlive = true;
 
@@ -210,12 +222,12 @@ public class RestServer {
 	public void onPong(PongMessage pm) {
 		if (Arrays.equals(pm.getApplicationData().array(), pings)) {
 			isAlive = true;
-			log.info("{}心跳成功...", reqInfo.getRemoteAddr());
+			log.info("{}心跳成功.ht success..", reqInfo.getRemoteAddr());
 		} else {
 			log.info("ping已断开连接");
 			isAlive = false;
 		}
 	}
 
-	protected byte[] pings = "1".getBytes(StandardCharsets.UTF_8);
+	protected byte[] pings = "0".getBytes(StandardCharsets.UTF_8);
 }
