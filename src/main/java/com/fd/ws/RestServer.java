@@ -53,6 +53,8 @@ public class RestServer {
 
 	@OnOpen
 	public void open(Session session, EndpointConfig config) {
+		session.setMaxBinaryMessageBufferSize(session.getMaxBinaryMessageBufferSize()*5);
+		session.setMaxTextMessageBufferSize(session.getMaxTextMessageBufferSize()*5);
 		synchronized (CoordinateUtil.CLIENTS) {
 			this.reqInfo = (ReqInfo) config.getUserProperties().get(WsServerListener.REQ_INFO);
 			for (ClientInfo ci : CoordinateUtil.CLIENTS) {
